@@ -18,8 +18,8 @@ from pyspark.sql.types import (
 from pyspark.sql.functions import monotonically_increasing_id
 from shutil import rmtree
 
-from .workdir import workdir
 from .utils import raise_parquet_not_del_error
+from .workdir import workdir
 
 
 def get_accident_df(spark, use_cache=True):
@@ -34,10 +34,9 @@ def fetch_accidents_montreal():
         print("Skip fetching montreal accidents dataset: already downloaded")
         return
     url = (
-        "http://donnees.ville.montreal.qc.ca/dataset/"
-        "cd722e22-376b-4b89-9bc2-7c7ab317ef6b/resource/"
-        "05deae93-d9fc-4acb-9779-e0942b5e962f/download/"
-        "accidents_2012_2017.zip"
+        "https://data.montreal.ca/dataset/cd722e22-376b-4b89-9bc2-7c7ab317ef6b/"
+        "resource/05deae93-d9fc-4acb-9779-e0942b5e962f/download/"
+        "collisions_routieres.csv"
     )
     url_variable_desc = (
         "https://saaq.gouv.qc.ca/donnees-ouvertes/"
@@ -46,18 +45,14 @@ def fetch_accidents_montreal():
     )
     print("Fetching montreal accidents dataset...")
     try:
-        (
-            ZipFile(BytesIO(urlopen(url).read())).extract(
-                "Accidents_2012_2017/Accidents_2012_2017.csv", path=workdir + "data"
-            )
-        )
+        urlretrieve(url, workdir + "data/accidents.csv")
         urlretrieve(
             url_variable_desc, workdir + "data/accident-montreal-documentation.pdf"
         )
         print("Fetching montreal accidents dataset: done")
         open(workdir + "data/accidents-montreal.lock", "w").close()
     except (URLError, HTTPError):
-        print("Unable to find montreal accidents dataset.")
+        raise Exception("Unable to download montreal accidents dataset.")
 
 
 def read_accidents_montreal_df(spark, use_cache=True):
@@ -71,7 +66,7 @@ def read_accidents_montreal_df(spark, use_cache=True):
 
     df = (
         spark.read.csv(
-            workdir + "data/Accidents_2012_2017/Accidents_2012_2017.csv", header=True
+            workdir + "data/accidents.csv", header=True
         )
         .repartition(200)
         .withColumn("ACCIDENT_ID", monotonically_increasing_id())
