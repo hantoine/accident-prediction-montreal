@@ -28,8 +28,9 @@ from requests import get
 import pandas as pd
 import numpy as np
 import re
-from utils import get_with_retry as get
-from workdir import workdir
+
+from .utils import get_with_retry as get
+from .workdir import workdir
 
 COLUMNS_USED = [
     "Dew Point Temp (°C)",

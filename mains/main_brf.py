@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
-import accident_prediction_montreal
 from datetime import datetime
 from pyspark.sql.functions import col
-from random_forest import balanced_random_forest_tuning, \
-                          compute_precision_recall, \
-                          compute_precision_recall_graph
-from preprocess import get_positive_samples, \
-                       get_negative_samples, \
-                       get_dataset_df
-from evaluate import evaluate_binary_classifier
-from utils import init_spark
-from workdir import workdir
+
+from accident_prediction_montreal.random_forest import (
+    balanced_random_forest_tuning,
+    compute_precision_recall,
+    compute_precision_recall_graph,
+)
+from accident_prediction_montreal.preprocess import (
+    get_positive_samples,
+    get_negative_samples,
+    get_dataset_df,
+)
+from accident_prediction_montreal.evaluate import evaluate_binary_classifier
+from accident_prediction_montreal.utils import init_spark
+from accident_prediction_montreal.workdir import workdir
 
 spark = init_spark()
 

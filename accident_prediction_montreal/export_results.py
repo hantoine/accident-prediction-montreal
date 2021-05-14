@@ -1,9 +1,10 @@
 from os import mkdir
 from os.path import isdir
 from pyspark.sql import SparkSession
-from evaluate import evaluate_binary_classifier
-from random_forest import compute_threshold_dependent_metrics
-from workdir import workdir
+
+from .evaluate import evaluate_binary_classifier
+from .random_forest import compute_threshold_dependent_metrics
+from .workdir import workdir
 
 
 def create_result_dir(algorithm):

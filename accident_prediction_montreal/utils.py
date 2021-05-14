@@ -4,7 +4,7 @@ from pyspark import SparkConf
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-from workdir import workdir
+from .workdir import workdir
 
 
 def raise_parquet_not_del_error(cache):

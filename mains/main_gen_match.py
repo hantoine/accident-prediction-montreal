@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import accident_prediction_montreal
 import os
 from functools import reduce
 import datetime
@@ -7,14 +6,17 @@ from os.path import isdir
 from pyspark.sql.functions import col
 from pyspark.sql import Window
 from pyspark.sql import DataFrame
-from utils import init_spark
-from workdir import workdir
-from preprocess import preprocess_accidents, \
-                       get_positive_samples, \
-                       get_negative_samples, \
-                       match_accidents_with_roads
-from road_network import get_road_df
-from accidents_montreal import get_accident_df
+
+from accident_prediction_montreal.utils import init_spark
+from accident_prediction_montreal.workdir import workdir
+from accident_prediction_montreal.preprocess import (
+    preprocess_accidents,
+    get_positive_samples,
+    get_negative_samples,
+    match_accidents_with_roads,
+)
+from accident_prediction_montreal.road_network import get_road_df
+from accident_prediction_montreal.accidents_montreal import get_accident_df
 
 
 def generate_match_accident_road_of_one_month(year, month):

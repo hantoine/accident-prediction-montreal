@@ -16,9 +16,10 @@ from pyspark.sql.types import (
     DataType,
 )
 from pyspark.sql.functions import monotonically_increasing_id
-from utils import raise_parquet_not_del_error
 from shutil import rmtree
-from workdir import workdir
+
+from .workdir import workdir
+from .utils import raise_parquet_not_del_error
 
 
 def get_accident_df(spark, use_cache=True):

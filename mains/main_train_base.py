@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-import accident_prediction_montreal
 from pyspark.sql.functions import udf, min, max, col
 from pyspark.sql.types import FloatType
 from pyspark.ml.feature import VectorAssembler
-from preprocess import get_negative_samples, get_positive_samples
-from utils import init_spark
-from preprocess import get_dataset_df
-from export_results import *
+
+from accident_prediction_montreal.preprocess import get_negative_samples, get_positive_samples
+from accident_prediction_montreal.utils import init_spark
+from accident_prediction_montreal.preprocess import get_dataset_df
+from accident_prediction_montreal.export_results import *
 
 
 result_dir = create_result_dir('base')

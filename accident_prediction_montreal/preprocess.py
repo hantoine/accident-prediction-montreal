@@ -27,17 +27,18 @@ from pyspark.sql.types import BooleanType
 from pyspark.ml.feature import OneHotEncoder
 from pyspark.ml.feature import StringIndexer
 from pyspark.ml.feature import VectorAssembler
-from utils import raise_parquet_not_del_error
-from accidents_montreal import get_accident_df
-from road_network import (
+
+from .utils import raise_parquet_not_del_error
+from .accidents_montreal import get_accident_df
+from .road_network import (
     distance_intermediate_formula,
     distance_measure,
     get_road_features_df,
     get_road_df,
 )
-from weather import get_weather_df
-from solar_features import add_solar_features
-from workdir import workdir
+from .weather import get_weather_df
+from .solar_features import add_solar_features
+from .workdir import workdir
 
 
 def preprocess_accidents(accidents_df):

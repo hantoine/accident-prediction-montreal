@@ -2,26 +2,25 @@ import numpy as np
 import shutil
 import os
 
-import accident_prediction_montreal
-from evaluate import *
-from random_forest import *
-from utils import init_spark
-from preprocess import get_positive_samples, \
-                       get_negative_samples, \
-                       get_dataset_df
-from workdir import workdir
-
 
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.sql.functions import col
-
-
 from pyspark.ml import Pipeline
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from pyspark.ml.feature import StringIndexer, VectorAssembler
 from pyspark.ml.tuning import ParamGridBuilder, CrossValidator
+
+from accident_prediction_montreal.evaluate import *
+from accident_prediction_montreal.random_forest import *
+from accident_prediction_montreal.utils import init_spark
+from accident_prediction_montreal.preprocess import (
+    get_positive_samples,
+    get_negative_samples,
+    get_dataset_df,
+)
+from accident_prediction_montreal.workdir import workdir
 
 
 def save_model():

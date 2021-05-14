@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-import accident_prediction_montreal
-from accidents_montreal import get_accident_df
-from weather import get_weather_df
-from utils import init_spark
-from preprocess import preprocess_accidents
+from accident_prediction_montreal.accidents_montreal import get_accident_df
+from accident_prediction_montreal.weather import get_weather_df
+from accident_prediction_montreal.utils import init_spark
+from accident_prediction_montreal.preprocess import preprocess_accidents
 
 spark = init_spark()
 
