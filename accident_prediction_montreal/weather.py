@@ -68,6 +68,7 @@ def get_weather_station_id(lat, long, year, month, day):
         f"txtCentralLatDeg={abs(lat[0])}&txtCentralLatMin={lat[1]}&"
         f"txtCentralLatSec={lat[2]:.1f}&txtCentralLongDeg={abs(long[0])}&"
         f"txtCentralLongMin={long[1]}&txtCentralLongSec={long[2]:.1f}&"
+        f"txtLatDecDeg=&txtLongDecDeg=&"
         f"StartYear=1840&EndYear=2019&optLimit=specDate&Year={year}&"
         f"Month={month}&Day={day}&selRowPerPage=100"
     )
