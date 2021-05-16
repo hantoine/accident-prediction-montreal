@@ -23,6 +23,7 @@ pyspark = "*"
 py4j = "*"
 
 [tool.poetry.dev-dependencies]
+flake8 = "^3.9.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
