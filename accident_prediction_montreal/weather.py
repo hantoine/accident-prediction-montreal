@@ -24,10 +24,8 @@ from pyspark.sql.types import (
     ArrayType,
     DateType,
 )
-from requests import get
 import pandas as pd
 import numpy as np
-import re
 
 from .utils import get_with_retry as get
 from .workdir import workdir
@@ -62,7 +60,7 @@ def get_weather_station_id(lat, long, year, month, day):
     lat = degree_to_DMS(lat)
     long = degree_to_DMS(long)
     url = (
-        f"http://climate.weather.gc.ca/historical_data/"
+        f"https://climate.weather.gc.ca/historical_data/"
         f"search_historic_data_stations_e.html?searchType=stnProx&"
         f"timeframe=1&txtRadius=25&selCity=&selPark=&optProxType=custom&"
         f"txtCentralLatDeg={abs(lat[0])}&txtCentralLatMin={lat[1]}&"
@@ -84,17 +82,18 @@ def get_weather_station_id(lat, long, year, month, day):
     return [int(s.find("input", {"name": "StationID"})["value"]) for s in stations]
 
 
-def get_weather_station_id_df(spark, accident_df):
+def get_weather_station_id_df(spark, accident_df, cache_file=None):
     """Generate dataframe with the station ids of all stations necessary for
     given accident dataframe
     """
-    cache_file = workdir + "data/weather_stations_id.parquet"
+    cache_file = cache_file or (workdir + "data/weather_stations_id.parquet")
     if isdir(cache_file):
         print("Skip downloading weather station ids: already done")
         return spark.read.parquet(cache_file)
 
     get_weather_station_id_udf = udf(get_weather_station_id, ArrayType(IntegerType()))
 
+    accident_df = accident_df.limit(800)
     df = (
         accident_df.select(
             get_weather_station_id_udf(
@@ -110,6 +109,7 @@ def get_weather_station_id_df(spark, accident_df):
     )
 
     df.write.parquet(cache_file)
+
     return df
 
 
