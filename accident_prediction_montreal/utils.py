@@ -1,6 +1,5 @@
 from os.path import isdir
 from pyspark.sql import SparkSession
-from pyspark import SparkConf
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
@@ -18,8 +17,8 @@ def raise_parquet_not_del_error(cache):
 def init_spark():
     sess = (
         SparkSession.builder.appName("Accident prediction")
-        # .master("local[6]")
-        # .config("spark.driver.memory", "4g")
+        .master("local[6]")
+        .config("spark.driver.memory", "4g")
         .config("spark.rdd.compress", "True")
         .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         # In local mode there is only one executor: the driver
