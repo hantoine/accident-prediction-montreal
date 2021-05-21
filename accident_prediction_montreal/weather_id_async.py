@@ -1,3 +1,4 @@
+import logging
 import asyncio
 import aiohttp
 import backoff
@@ -14,8 +15,9 @@ def get_weather_station_ids(accidents_infos):
 
 
 async def get_weather_station_ids_async(accidents_infos):
-    connector = aiohttp.TCPConnector(limit=30)
-    async with aiohttp.ClientSession(connector=connector) as client:
+    connector = aiohttp.TCPConnector(limit=50, force_close=True)
+    timeout = aiohttp.ClientTimeout(total=None)
+    async with aiohttp.ClientSession(connector=connector, timeout=timeout) as client:
         futures = [get_weather_station_id_async(client, **acc_info.asDict())
                    for acc_info in accidents_infos]
         stations_ids = set()
@@ -32,7 +34,7 @@ def backoff_hdlr(details):
 @backoff.on_exception(
     backoff.expo,
     (aiohttp.ClientError, asyncio.exceptions.TimeoutError),
-    max_tries=10,
+    max_tries=20,
     on_backoff=backoff_hdlr,
 )
 async def get_weather_station_id_async(client, lat, long, year, month, day):
@@ -50,13 +52,17 @@ async def get_weather_station_id_async(client, lat, long, year, month, day):
         f"StartYear=1840&EndYear=2019&optLimit=specDate&Year={year}&"
         f"Month={month}&Day={day}&selRowPerPage=100"
     )
-    async with client.get(url, raise_for_status=True) as response:
-        page = BeautifulSoup(await response.text(), "lxml")
-        stations = page.body.main.find(
-            "div", class_="historical-data-results proximity hidden-lg"
-        ).find_all("form", recursive=False)
-        return [int(s.find("input", {"name": "StationID"})["value"])
-                for s in stations]
+    try:
+        async with client.get(url, raise_for_status=True) as response:
+            page = BeautifulSoup(await response.text(), "lxml")
+            stations = page.body.main.find(
+                "div", class_="historical-data-results proximity hidden-lg"
+            ).find_all("form", recursive=False)
+            return [int(s.find("input", {"name": "StationID"})["value"])
+                    for s in stations]
+    except:
+        logging.exception("An exception occured while fetching weather stations ids.")
+        raise  # Backoff will retry
 
 
 def degree_to_DMS(degree):
