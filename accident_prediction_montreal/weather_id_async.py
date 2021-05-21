@@ -14,7 +14,8 @@ def get_weather_station_ids(accidents_infos):
 
 
 async def get_weather_station_ids_async(accidents_infos):
-    async with aiohttp.ClientSession() as client:
+    connector = aiohttp.TCPConnector(limit=30)
+    async with aiohttp.ClientSession(connector=connector) as client:
         futures = [get_weather_station_id_async(client, **acc_info.asDict())
                    for acc_info in accidents_infos]
         stations_ids = set()
@@ -23,7 +24,17 @@ async def get_weather_station_ids_async(accidents_infos):
         return stations_ids
 
 
-@backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=10, max_time=60)
+def backoff_hdlr(details):
+    print("Backing off {wait:0.1f} seconds after {tries} tries calling function "
+          "{target.__name__} with kwargs {kwargs}".format(**details))
+
+
+@backoff.on_exception(
+    backoff.expo,
+    (aiohttp.ClientError, asyncio.exceptions.TimeoutError),
+    max_tries=10,
+    on_backoff=backoff_hdlr,
+)
 async def get_weather_station_id_async(client, lat, long, year, month, day):
     """Get data from all stations."""
     lat = degree_to_DMS(lat)
