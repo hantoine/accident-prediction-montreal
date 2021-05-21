@@ -1,8 +1,10 @@
 import logging
 import asyncio
+
 import aiohttp
 import backoff
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 
 def get_weather_station_ids(accidents_infos):
@@ -21,7 +23,11 @@ async def get_weather_station_ids_async(accidents_infos):
         futures = [get_weather_station_id_async(client, **acc_info.asDict())
                    for acc_info in accidents_infos]
         stations_ids = set()
-        for future in asyncio.as_completed(futures):
+        for future in tqdm(
+            asyncio.as_completed(futures),
+            desc="Fetching of weather station IDs",
+            total=len(accidents_infos)
+        ):
             stations_ids.update(await future)
         return stations_ids
 
@@ -60,7 +66,7 @@ async def get_weather_station_id_async(client, lat, long, year, month, day):
             ).find_all("form", recursive=False)
             return [int(s.find("input", {"name": "StationID"})["value"])
                     for s in stations]
-    except:
+    except Exception:
         logging.exception("An exception occured while fetching weather stations ids.")
         raise  # Backoff will retry
 
