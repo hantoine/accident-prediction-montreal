@@ -29,6 +29,7 @@ import numpy as np
 
 from .utils import get_with_retry as get
 from .workdir import workdir
+from .weather_id_async import get_weather_station_ids
 
 COLUMNS_USED = [
     "Dew Point Temp (°C)",
@@ -55,33 +56,6 @@ def get_weather_df(spark, accident_df):
     return stations_weather_df.join(stations_coord_df, "station_id")
 
 
-def get_weather_station_id(lat, long, year, month, day):
-    """Get data from all stations."""
-    lat = degree_to_DMS(lat)
-    long = degree_to_DMS(long)
-    url = (
-        f"https://climate.weather.gc.ca/historical_data/"
-        f"search_historic_data_stations_e.html?searchType=stnProx&"
-        f"timeframe=1&txtRadius=25&selCity=&selPark=&optProxType=custom&"
-        f"txtCentralLatDeg={abs(lat[0])}&txtCentralLatMin={lat[1]}&"
-        f"txtCentralLatSec={lat[2]:.1f}&txtCentralLongDeg={abs(long[0])}&"
-        f"txtCentralLongMin={long[1]}&txtCentralLongSec={long[2]:.1f}&"
-        f"txtLatDecDeg=&txtLongDecDeg=&"
-        f"StartYear=1840&EndYear=2019&optLimit=specDate&Year={year}&"
-        f"Month={month}&Day={day}&selRowPerPage=100"
-    )
-    try:
-        page = BeautifulSoup(get(url).content, "lxml")
-        stations = page.body.main.find(
-            "div", class_="historical-data-results proximity hidden-lg"
-        ).find_all("form", recursive=False)
-    except Exception:
-        print("Unable to fetch:", url)
-        raise
-
-    return [int(s.find("input", {"name": "StationID"})["value"]) for s in stations]
-
-
 def get_weather_station_id_df(spark, accident_df, cache_file=None):
     """Generate dataframe with the station ids of all stations necessary for
     given accident dataframe
@@ -91,25 +65,18 @@ def get_weather_station_id_df(spark, accident_df, cache_file=None):
         print("Skip downloading weather station ids: already done")
         return spark.read.parquet(cache_file)
 
-    get_weather_station_id_udf = udf(get_weather_station_id, ArrayType(IntegerType()))
-
-    accident_df = accident_df.limit(800)
-    df = (
-        accident_df.select(
-            get_weather_station_id_udf(
-                col("loc_lat"),
-                col("loc_long"),
-                year("date"),
-                month("date"),
-                dayofmonth("date"),
-            ).alias("stations")
-        )
-        .select(explode(col("stations").alias("station_id")))
-        .distinct()
-    )
+    accident_infos = accident_df.select(
+        col("loc_lat").alias('lat'),
+        col("loc_long").alias('long'),
+        year("date").alias('year'),
+        month("date").alias('month'),
+        dayofmonth("date").alias('day'),
+    ).collect()
+    station_ids = get_weather_station_ids(accident_infos)
+    df = (spark.createDataFrame(station_ids, IntegerType())
+          .withColumnRenamed('value', 'station_id'))
 
     df.write.parquet(cache_file)
-
     return df
 
 
@@ -295,20 +262,6 @@ def get_weather_station_coords_df(spark, stations_id):
     df.write.parquet(cache_file)
 
     return df
-
-
-def degree_to_DMS(degree):
-    """Convert from plain degrees format to DMS format of geolocalization.
-    DMS: "Degrees, Minutes, Seconds" is a format for coordinates at the surface
-        of earth. Decimal Degrees = degrees + (minutes/60) + (seconds/3600)
-        This measure permit to gain in precision when a degree is not precise
-        enough.
-    """
-    return (
-        int(degree),
-        int(60 * (abs(degree) % 1)),
-        ((60 * (abs(degree) % 1)) % 1) * 60,
-    )
 
 
 def DMS_to_degree(coord):
